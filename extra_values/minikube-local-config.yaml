@@ -1,0 +1,86 @@
+proxy:
+  secretToken: "3050c129f816e08f22e0d96a1448de0c54b3c6a4846af4c94dc114a02a1c01f1"
+  service:
+    type: NodePort
+    nodePorts:
+      http: 31212
+  chp:
+    resources:
+      requests:
+        memory: 0
+        cpu: 0
+
+singleuser:
+  profileList:
+  - display_name: "default"
+    description: "Default"
+    default: True
+  - display_name: "jupyterhub/singleuser:latest"
+    description: "JH SingleUser image"
+    kubespawner_override:
+      image: "jupyterhub/singleuser:latest"
+  - display_name: "jackfast/singleuser:latest"
+    description: "Single user test image"
+    kubespawner_override:
+      image: "jackfast/singleuser:latest"
+      image_pull_policy: Always
+      image_pull_secrets: jackfast
+  - display_name: "registry.local/singleuser:latest"
+    description: "Single user test image"
+    kubespawner_override:
+      image: "registry.local/singleuser:latest"
+      image_pull_policy: Always
+      image_pull_secrets: registrylocal
+  - display_name: "jupyterhub/k8s-singleuser-sample"
+    description: "BBB"
+    kubespawner_override:
+      image: "jupyterhub/k8s-singleuser-sample"
+  - display_name: "registry.local/base:beta"
+    description: "CodeKey Base k8s image"
+    kubespawner_override:
+      image: "registry.local/base:beta"
+      image_pull_policy: Always
+      image_pull_secrets: registrylocal
+  storage:
+    type: none
+  memory:
+    guarantee: null
+
+
+hub:
+  image:
+    name: registry.local/keystonehub
+    tag: dev
+  imagePullPolicy: Always
+  imagePullSecret:
+    enabled: true
+    registry: https://registry.local/v2/
+    username: my_user
+    password: 123
+  allowNamedServers: true
+  extraConfig: |
+    c.JupyterHub.api_tokens = {
+    'c84a387c7104614f0c4791d184ec16a96d36fb8fdb69ad8744ee1963ad3e12a8': 'aibek',
+    }
+  cookieSecret: 1470700e01f77171c2c67b12130c25081dfbdf2697af8c2f2bd05621b31100bf
+  db:
+    type: sqlite-memory
+  resources:
+    requests:
+      memory: 0
+      cpu: 0
+  services:
+    test:
+      admin: true
+      apiToken: 0cc05feaefeeb29179e924ffc6d3886ffacf0d1a28ab225f5c210436ffc5cfd5
+
+prePuller:
+  hook:
+    enabled: false
+
+scheduling:
+  userScheduler:
+    enabled: true
+
+debug:
+  enabled: true

@@ -1,0 +1,65 @@
+proxy:
+  secretToken: "some_proxy_secret_token"
+  https:
+    hosts:
+      - hub.some_domain.io
+    letsencrypt:
+      contactEmail: some_user@some_domain.com
+
+singleuser:
+  networkTools:
+    image:
+      name: jupyterhub/k8s-network-tools
+      tag: cc865bd
+  image:
+    name: codekey/some-singleuser
+    tag: v.0.1.0.alpha
+  imagePullPolicy: IfNotPresent
+  imagePullSecret:
+    enabled: true
+    registry: https://index.docker.io/v1/
+    username: codekeyhub
+    password: Aqzx123$
+  storage:
+    type: dynamic
+    capacity: 20Gi
+    homeMountPath: '/app/code-key-light/projects/external'
+    static:
+      subPath: '{username}'
+    dynamic:
+      pvcNameTemplate: hub-claim-{username}-{servername}
+      volumeNameTemplate: hub-{username}-{servername}
+
+hub:
+  image:
+    name: codekey/some-hub
+    tag: v0.1.0-pre-alpha
+  imagePullPolicy: IfNotPresent
+  imagePullSecret:
+    enabled: true
+    registry: https://index.docker.io/v1/
+    username: some_user
+    password: some_password
+    allowNamedServers: true
+  extraEnv:
+    AUTH0_SUBDOMAIN: some_auth_domain
+    OAUTH_CLIENT_SECRET: some_client_secret_ey
+    OAUTH_CLIENT_ID: some_client_id
+    OAUTH_CALLBACK_URL: some_callback
+  extraConfig: |
+    c.Spawner.notebook_dir = '/app/code-key-light/projects'
+auth:
+  type: custom
+  custom:
+    className: oauthenticator.auth0.Auth0OAuthenticator
+
+prePuller:
+  hook:
+    enabled: true
+    extraEnv: {}
+    image:
+      name: jupyterhub/k8s-image-awaiter
+      tag: cc865bd
+
+cull:
+  timeout: 14400

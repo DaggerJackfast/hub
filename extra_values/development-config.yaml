@@ -1,0 +1,86 @@
+proxy:
+  secretToken: "some_development_secret_key"
+  https:
+    hosts:
+      - staging.hub.some_domain.io
+    letsencrypt:
+      contactEmail: some_user@some_mail.com
+
+singleuser:
+  networkTools:
+    image:
+      name: jupyterhub/k8s-network-tools
+      tag: 'cc865bd'
+  imagePullSecret:
+    enabled: true
+    registry: https://index.docker.io/v1/
+    username: some_username
+    password: some_password
+  profileList:
+  - display_name: "default"
+    description: "Codekey base kubernetes image"
+    kubespawner_override:
+      image: "codekey/base:beta"
+      image_pull_policy: Always
+      image_pull_secrets: hub-image-credentials
+    default: True
+  - display_name: "Image with storage"
+    description: "Codekey base kubernetes image with 10 GB volume storage"
+    kubespawner_override:
+      image: "codekey/base:beta"
+      image_pull_policy: Always
+      image_pull_secrets: hub-image-credentials
+      storage_capacity: "10Gi"
+  - display_name: "jupyterhub/singleuser:latest"
+    description: "Official jupyterhub kubernetes singleuser image"
+    kubespawner_override:
+      image: "jupyterhub/singleuser:latest"
+      image_pull_policy: Always
+      image_pull_secrets: hub-image-credentials
+  storage:
+    type: dynamic
+    capacity: 3Gi
+    homeMountPath: '/app/code-key-light/projects/external'
+    static:
+      subPath: '{username}'
+    dynamic:
+      pvcNameTemplate: staging-claim-{username}-{servername}
+      volumeNameTemplate: staging-{username}-{servername}
+
+
+hub:
+  image:
+    name: codekey/dev-hub
+    tag: some_tag
+  imagePullPolicy: IfNotPresent
+  imagePullSecret:
+    enabled: true
+    registry: https://index.docker.io/v1/
+    username: some_user
+    password: some_password
+  allowNamedServers: true
+  extraEnv:
+    AUTH0_SUBDOMAIN: domain
+    OAUTH_CLIENT_SECRET: secret
+    OAUTH_CLIENT_ID: id
+    OAUTH_CALLBACK_URL: http://staging.hub.some_domain.io/hub/oauth_callback
+  extraConfig: |
+    c.Spawner.notebook_dir = '/app/code-key-light/projects'
+auth:
+  type: custom
+  custom:
+    className: oauthenticator.auth0.Auth0OAuthenticator
+
+prePuller:
+  hook:
+    enabled: true
+    extraEnv: {}
+    image:
+      name: jupyterhub/k8s-image-awaiter
+      tag: 'cc865bd'
+
+cull:
+  timeout: 14400
+
+debug:
+  enabled: true
